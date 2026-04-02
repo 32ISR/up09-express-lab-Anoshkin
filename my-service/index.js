@@ -267,7 +267,7 @@ app.delete("/api/admin/users/:id", auth, (req, res) => {
     try {
 
         if (req.user.role !== "admin")
-        return res.status(403).json({ error: "u aren't admin" })
+            return res.status(403).json({ error: "u aren't admin" })
         const { id } = req.params
         const user = db.prepare("SELECT * FROM users WHERE id = ?").get(id)
         if (!user) return res.status(404).json({ error: "Юзер не найден" })
@@ -279,5 +279,45 @@ app.delete("/api/admin/users/:id", auth, (req, res) => {
         res.status(500).json({ error: "Something went wrong" })
     }
 })
+app.put("/api/books/:id", auth, (req, res) => {
+    try {
+        const item = db.prepare("SELECT * FROM books WHERE id = ?")
+        if (!item) {
+            return res.status(404).json({ error: "Book not found" });
+        }
+        const { id } = req.params
+        const newItem = { ...item, ...req.body }
+        const updateStmt = db.prepare("UPDATE books SET title = ?, author = ?, year = ?, genre = ?, description = ? WHERE id = ? ")
+        const result = updateStmt.run(
+            newItem.title,
+            newItem.author,
+            newItem.year,
+            newItem.genre,
+            newItem.description,
+            id
+        );
+        const newItemFromDB = db.prepare("SELECT * FROM books WHERE id = ?").get(id)
+
+        res.status(200).json({newItemFromDB});
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to update book" });
+    }
+})
 
 app.listen(PORT)
+// const book = {
+//     id: 234,
+//     createdAt: 1273812739,
+//     title: "catcher in the rye",
+//     genre: "romance",
+//     author: "kto-to"
+// }
+
+// const req = {
+//     title: "flower's for aljernon",
+//     genre: "romance",
+//     author: "kto-to"
+// }
+
+// const newBook = {...book, ...req}
