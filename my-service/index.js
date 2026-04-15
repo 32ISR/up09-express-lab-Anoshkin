@@ -206,7 +206,11 @@ app.delete("/api/reviews/:id", auth, (req, res) => {
         const { id } = req.params
         const review = db.prepare("SELECT * FROM review WHERE id = ?").get(id)
         if (!review) return res.status(404).json({ error: "Отзыв не найден" })
-        
+         if (!['admin'].includes(req.user.role) || req.user.id !== Reviews.userId) {
+            return res
+            .status(403)
+            .json({message: 'Доступ запрещен: недостаточно прав'})
+        }
         db.prepare('DELETE FROM review WHERE id = ?').run(id)
         return res.status(200).json({ message: 'Deleted successfully' })
     } catch (error) {
@@ -220,7 +224,7 @@ app.delete("/api/books/:id", auth, (req, res) => {
         const { id } = req.params
         const book = db.prepare("SELECT * FROM books WHERE id = ?").get(id)
         if (!book) return res.status(404).json({ error: "Книга не найдена" })
-        if (!['admin'].includes(req.user.role) || req.user.id !== Reviews.userId) {
+        if (!['admin'].includes(req.user.role) || req.user.id !== Books.userId) {
             return res
             .status(403)
             .json({message: 'Доступ запрещен: недостаточно прав'})
